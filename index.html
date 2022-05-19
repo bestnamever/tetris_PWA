@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <title>Document</title>
+    <style>
+        td {
+            height: 20px;
+            width: 20px;
+            border: 2px solid grey;
+        }
+
+        .selected {
+            background-color: aqua;
+        }
+
+        .end {
+            background-color: grey;
+        }
+
+        button {
+            margin-top: 2vh;
+            margin-right: 2vh;
+            display: inline-block;
+            padding: 15px 25px;
+            font-size: 24px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            outline: none;
+            color: rgb(0, 0, 0);
+            background-color: #cecece;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 3px #999;
+        }
+
+        button:hover {
+            background-color: #f5f5f5
+        }
+
+        button:active {
+            background-color: #dfdfdf;
+            box-shadow: 0 2px #666;
+            transform: translateY(2px);
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="totalScore"></h1>
+    <table></table>
+    <button id="left">←</button>
+    <span></span>
+    <button id="down">↓</button>
+    <span></span>
+    <button id="right">→</button>
+    <span></span>
+    <button id="rotate">↷</button>
+    <span></span>
+    <script>
+
+        class A {
+
+            status = 0
+            position = null
+            positionList = null
+
+            constructor(originPoint) {
+                this.setPositionList(originPoint)
+                this.position = this.positionList[0]
+            }
+
+            setPositionList({ top, left }) {
+                this.positionList = [
+                    [
+                        { top: top - 1, left: left - 1 },
+                        { top: top - 1, left: left },
+                        { top: top, left: left },
+                        { top: top + 1, left: left }
+                    ],
+                    [
+                        { top: top - 1, left: left + 1 },
+                        { top: top, left: left + 1 },
+                        { top: top, left: left },
+                        { top: top, left: left - 1 },
+                    ],
+                    [
+                        { top: top + 1, left: left + 1 },
+                        { top: top + 1, left: left },
+                        { top: top, left: left },
+                        { top: top - 1, left: left },
+                    ],
+                    [
+                        { top: top + 1, left: left - 1 },
+                        { top: top, left: left - 1 },
+                        { top: top, left: left },
+                        { top: top, left: left + 1 },
+                    ]
+                ]
+            }
+
+            setPosition(status) {
+                this.status = status
+                this.position = this.positionList[status]
+            }
+
+            getOriginPoint() {
+                return this.position[2];
+            }
+
+            rotate() {
+                this.status++
+                this.status = this.status == this.positionList.length ? 0 : this.status
+                let newIcon = new this.constructor(this.getOriginPoint());
+                newIcon.setPosition(this.status);
+                return newIcon
+            }
+
+        }
+
+
+        /**
+         * DOM element
+         */
+        let totalScoreEl = document.querySelector("#totalScore");
+        let table = document.querySelector("table")
+
+        document.querySelector('#down').onclick = function () {
+            game.pressDown()
+        }
+        document.querySelector('#left').onclick = function () {
+            game.left()
+        }
+        document.querySelector('#right').onclick = function () {
+            game.right()
+        }
+        document.querySelector('#rotate').onclick = function () {
+            game.rotate()
+        }
+
+        /**
+         * Game
+         */
+        let game = {
+            totalScore: 0,
+            icon_before: null,
+            icon_after: null,
+            classX: null,
+            data: [
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+            ],
+
+
+            renderTable() {
+                totalScoreEl.innerHTML = this.totalScore
+                table.innerHTML = ""
+                this.data.forEach(row => {
+                    let tr = document.createElement('tr')
+                    row.forEach(columu => {
+                        let td = document.createElement('td')
+                        if (columu.state === 1) {
+                            td.className = "selected"
+                        }
+                        if (columu.state === 2) {
+                            td.className = "end"
+                        }
+                        tr.append(td)
+                    })
+                    table.append(tr)
+                });
+            },
+
+            /**
+             * functions
+             */
+
+            boarderAndTouched(icon) {
+                let touched = false
+                icon.position.forEach(element => {
+                    let top = element.top
+                    let left = element.left
+                    if (top > 13 || left < 0 || left > 10) {
+                        touched = true
+                    }
+                    else if (this.data[top][left].state === 2) {
+                        touched = true
+                    }
+
+                })
+                return touched
+            },
+
+            showIcon(icon) {
+                icon.position.forEach(element => {
+                    let top = element.top
+                    let left = element.left
+                    this.data[top][left].state = 1
+                });
+
+
+            },
+            nextTurn() {
+                this.icon_before.position.forEach(element => {
+                    this.data[element.top][element.left].state = 2
+                })
+                this.score()
+                this.init()
+            },
+
+            showNewIcon(position_after, dir) {
+                this.icon_after = new this.classX(position_after)
+                this.icon_after.setPosition(this.icon_before.status);
+                if (this.boarderAndTouched(this.icon_after)) {
+                    if (dir === 'down') {
+                        this.nextTurn()
+                    }
+                } else {
+                    this.cleanIcon(this.icon_before)
+                    this.icon_before = this.icon_after
+                    this.showIcon(this.icon_before)
+                    this.renderTable()
+                }
+            },
+
+            rotate() {
+                this.icon_after = this.icon_before.rotate();
+                console.log(this.icon_after)
+                if (!this.boarderAndTouched(this.icon_after)) {
+                    this.cleanIcon(this.icon_before);
+                    this.icon_before = this.icon_after;
+                    this.classX = this.icon_before.constructor;
+                    this.showIcon(this.icon_before);
+                    this.renderTable();
+                }
+            },
+
+            moveTo(dir) {
+                let x, y
+                switch (dir) {
+                    case 'down':
+                        x = 0
+                        y = 1
+                        break;
+                    case 'left':
+                        x = -1
+                        y = 0
+                        break;
+                    case 'right':
+                        x = 1
+                        y = 0
+                    default:
+                        break;
+                }
+                const position_before = this.icon_before.getOriginPoint()
+                const position_after = {
+                    top: position_before.top + y,
+                    left: position_before.left + x
+                }
+                this.showNewIcon(position_after, dir)
+            },
+
+
+            cleanIcon(icon) {
+                icon.position.forEach(element => {
+                    let top = element.top
+                    let left = element.left
+                    this.data[top][left].state = 0
+                });
+            },
+
+            /**
+             * button functions
+             */
+
+            down() {
+                this.moveTo('down')
+            },
+
+            pressDown() {
+                for (let i = 0; i < 3; i++) {
+                    this.down()
+                }
+            },
+
+            left() {
+                this.moveTo('left')
+            },
+
+            right() {
+                this.moveTo('right')
+            },
+
+            score() {
+                let list = [];
+                for (let i = 0; i < this.data.length; i++) {
+                    for (let j = 0; j < this.data[i].length; j++) {
+                        if (this.data[i][j].state !== 2) {
+                            break;
+                        }
+                        if (j === this.data[i].length - 1) {
+                            list.push(i)
+                        }
+
+                    }
+                };
+                list.map(v => {
+                    this.data.splice(v, 1);
+                    this.data.unshift([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}])
+                    this.totalScore++;
+                })
+            },
+
+            iconClassList: [A],
+            init() {
+                let n = Math.floor(Math.random() * this.iconClassList.length);
+                this.classX = this.iconClassList[n];
+                this.icon_before = new this.classX({ top: 1, left: 4 })
+                console.log(this.icon_before.position[2])
+                this.showIcon(this.icon_before)
+                this.renderTable()
+            },
+        }
+
+
+        game.init()
+        setInterval(() => {
+            game.down()
+        }, 500);
+
+        /**
+         * service worker
+         */
+        if (navigator.serviceWorker != null) {
+            navigator.serviceWorker.register('sw.js')
+                .then(function (registration) {
+                    console.log('Registered events at scope: ', registration.scope);
+                });
+        }
+
+    </script>
+</body>
+
+</html>
