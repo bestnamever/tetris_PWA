@@ -6,8 +6,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json">
-    <title>Document</title>
+    <title>Tetris</title>
     <style>
+        .gameplay {
+            position: relative;
+            margin: 0 auto;
+            width: 600px;
+            height: 200px;
+        }
+
+        table {
+            text-align: center;
+        }
+
         td {
             height: 20px;
             width: 20px;
@@ -52,16 +63,19 @@
 </head>
 
 <body>
-    <h1 id="totalScore"></h1>
-    <table></table>
-    <button id="left">←</button>
-    <span></span>
-    <button id="down">↓</button>
-    <span></span>
-    <button id="right">→</button>
-    <span></span>
-    <button id="rotate">↷</button>
-    <span></span>
+    <div class="gameplay">
+        <h1 id="totalScore"></h1>
+        <table></table>
+        <button id="left">←</button>
+        <span></span>
+        <button id="down">↓</button>
+        <span></span>
+        <button id="right">→</button>
+        <span></span>
+        <button id="rotate">↷</button>
+        <span></span>
+    </div>
+
     <script>
 
         class A {
